@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Word Search Game</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1>Word Search Game</h1>
+<div id="game-board">
+{% for row in grid %}
+<div class="row">
+{% for cell in row %}
+<div class="cell" id="{{ loop.index0 }}{{ loop.index1 }}" onclick="selectCell(this)">
+{{ cell }}
+</div>
+{% endfor %}
+</div>
+{% endfor %}
+</div>
+<form id="word-submission-form">
+<input type="text" id="word-input" placeholder="Enter a word">
+<input type="submit" value="Submit">
+</form>
+<div id="messages">
+{% if game_state.error_message %}
+<p class="error">{{ game_state.error_message }}</p>
+{% endif %}
+<p>Found Words: {{ game_state.found_words }}</p>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
+
+
