@@ -1,0 +1,143 @@
+
+<div class="row">
+{% for cell in row %}
+<div class="cell" id="{{ loop.index0 }}{{ loop.index1 }}" onclick="selectCell(this)">
+{{ cell }}
+</div>
+{% endfor %}
+</div>
+
+
+### styles.css
+css
+body {
+font-family: Arial, sans-serif;
+}
+
+#game-board {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+grid-gap: 10px;
+width: 300px;
+margin: 0 auto;
+}
+
+.row {
+display: flex;
+justify-content: center;
+}
+
+.cell {
+width: 50px;
+height: 50px;
+border: 1px solid black;
+text-align: center;
+vertical-align: middle;
+font-size: 20px;
+cursor: pointer;
+}
+
+.selected {
+background-color: yellow;
+}
+
+#messages {
+width: 300px;
+margin: 0 auto;
+padding: 10px;
+border: 1px solid black;
+}
+
+.error {
+color: red;
+}
+
+
+### script.js
+javascript
+// Function to select a cell in the grid
+function selectCell(cell) {
+// Check if the cell is already selected
+if (cell.classList.contains('selected')) {
+// Deselect the cell
+cell.classList.remove('selected');
+
+// Remove the cell from the list of selected cells
+game_state.selected_cells = game_state.selected_cells.filter(function(selectedCell) {
+return selectedCell !== cell.id;
+});
+} else {
+// Select the cell
+cell.classList.add('selected');
+
+// Add the cell to the list of selected cells
+game_state.selected_cells.push(cell.id);
+}
+
+// Update the word input field with the currently selected cells
+document.getElementById('word-input').value = game_state.selected_cells.map(function(cellId) {
+return document.getElementById(cellId).textContent;
+}).join('');
+}
+
+// Function to submit the word for validation
+document.getElementById('word-submission-form').addEventListener('submit', function(event) {
+event.preventDefault();
+
+// Get the word to be validated
+var word = document.getElementById('word-input').value.toUpperCase();
+
+// Send the word to the server for validation
+fetch('/validate_word', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ word: word })
+})
+.then(function(response) {
+return response.json();
+})
+.then(function(data) {
+// Handle the response from the server
+if (data.status === 'success') {
+// Clear the error message
+game_state.error_message = null;
+
+// Display a success message
+alert(data.message);
+
+// Deselect all cells
+var cells = document.querySelectorAll('.selected');
+for (var i = 0; i < cells.length; i++) {
+cells[i].classList.remove('selected');
+}
+
+// Clear the word input field
+document.getElementById('word-input').value = '';
+
+// Refresh the list of found words
+document.getElementById('messages').innerHTML = '<p>Found Words: ' + game_state.found_words.join(', ') + '</p>';
+} else {
+// Display an error message
+game_state.error_message = data.message;
+document.getElementById('messages').innerHTML = '<p class="error">' + game_state.error_message + '</p>';
+}
+})
+.catch(function(error) {
+console.error(error);
+});
+});
+
+// Function to reset the game
+document.getElementById('reset-game-button').addEventListener('click', function() {
+// Send a request to the server to reset the game
+fetch('/reset_game')
+.then(function(response) {
+window.location.reload();
+})
+.catch(function(error) {
+console.error(error);
+});
+});
+
